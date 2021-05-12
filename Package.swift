@@ -5,8 +5,19 @@ import PackageDescription
 
 let package = Package(
     name: "librsvg",
+    products: [
+        .library(
+            name: "librsvg",
+            type: .`dynamic`,
+            targets: ["librsvg"]),
+    ],
     dependencies: [
-        // Dependencies declare other packages that this package depends on.
-        // .package(url: /* package url */, from: "1.0.0"),
+    ],
+    targets: [
+        .target(
+            name: "librsvg",
+            resources: [
+                .copy("include/lib")
+            ])
     ]
 )
