@@ -18,7 +18,7 @@ let package = Package(
             name: "librsvg",
             path: "Sources",
             exclude: [],
-            sources: ["include"],
+            sources: ["librsvg"],
             resources: [
                 .copy("lib")
             ],
