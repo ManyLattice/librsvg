@@ -13,9 +13,10 @@ let package = Package(
     targets: [
         .target(
             name: "librsvg",
+            path: "Sources",
             resources: [
-                .copy("lib"),
-                .copy("headers")
+                .copy("librsvg/lib"),
+                .copy("librsvg/headers")
             ])
     ]
 )
