@@ -5,12 +5,8 @@ import PackageDescription
 
 let package = Package(
     name: "librsvg",
-    products: [
-        .library(
-            name: "librsvg",
-            targets: ["librsvg"]),
-    ],
-    targets: [
-        .target(name: "librsvg"),
+    dependencies: [
+        // Dependencies declare other packages that this package depends on.
+        // .package(url: /* package url */, from: "1.0.0"),
     ]
 )

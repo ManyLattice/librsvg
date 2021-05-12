@@ -1,0 +1,5 @@
+module librsvg [system] {
+  header "/usr/include/librsvg.h"
+  link "librsvg"
+  export *
+}
