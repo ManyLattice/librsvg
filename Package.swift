@@ -19,10 +19,8 @@ let package = Package(
             path: "Sources",
             resources: [
                 .copy("lib"),
-                .copy("headers")
-            ]),
-        .testTarget(
-            name: "librsvgTests",
-            dependencies: ["librsvg"]),
+                .copy("headers"),
+                .copy("librsvg")
+            ])
     ]
 )
