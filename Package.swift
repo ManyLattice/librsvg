@@ -19,8 +19,7 @@ let package = Package(
             path: "Sources",
             resources: [
                 .copy("lib"),
-                .copy("headers"),
-                .copy("librsvg")
+                .copy("headers")
             ])
     ]
 )
