@@ -6,18 +6,23 @@ import PackageDescription
 let package = Package(
     name: "librsvg",
     products: [
-        .library(
-            name: "librsvg",
-            type: .`dynamic`,
-            targets: ["librsvg"]),
-    ],
-    dependencies: [
-    ],
+            .library(
+                name: "librsvg",
+                type: .dynamic,
+                targets: ["librsvg"]
+            )
+        ],
+    dependencies: [],
     targets: [
         .target(
             name: "librsvg",
+            path: "Sources",
+            exclude: [],
+            sources: ["include"],
             resources: [
-                .copy("include/lib")
-            ])
+                .copy("lib")
+            ],
+            publicHeadersPath: "include/headers"
+        )
     ]
 )
