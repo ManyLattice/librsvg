@@ -5,7 +5,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -76,6 +76,7 @@ typedef struct _GFileInfoClass   GFileInfoClass;
  * A key in the "standard" namespace for checking if the file is a symlink.
  * Typically the actual type is something else, if we followed the symlink
  * to get the type.
+ * On Windows NTFS mountpoints are considered to be symlinks as well.
  * Corresponding #GFileAttributeType is %G_FILE_ATTRIBUTE_TYPE_BOOLEAN.
  **/
 #define G_FILE_ATTRIBUTE_STANDARD_IS_SYMLINK "standard::is-symlink"         /* boolean */
@@ -89,11 +90,26 @@ typedef struct _GFileInfoClass   GFileInfoClass;
 #define G_FILE_ATTRIBUTE_STANDARD_IS_VIRTUAL "standard::is-virtual"         /* boolean */
 
 /**
+ * G_FILE_ATTRIBUTE_STANDARD_IS_VOLATILE:
+ *
+ * A key in the "standard" namespace for checking if a file is
+ * volatile. This is meant for opaque, non-POSIX-like backends to
+ * indicate that the URI is not persistent. Applications should look
+ * at #G_FILE_ATTRIBUTE_STANDARD_SYMLINK_TARGET for the persistent URI.
+ *
+ * Corresponding #GFileAttributeType is %G_FILE_ATTRIBUTE_TYPE_BOOLEAN.
+ *
+ * Since: 2.46
+ **/
+#define G_FILE_ATTRIBUTE_STANDARD_IS_VOLATILE "standard::is-volatile"      /* boolean */
+
+/**
  * G_FILE_ATTRIBUTE_STANDARD_NAME:
  *
  * A key in the "standard" namespace for getting the name of the file.
  * The name is the on-disk filename which may not be in any known encoding,
- * and can thus not be generally displayed as is.
+ * and can thus not be generally displayed as is. It is guaranteed to be set on
+ * every file.
  * Use #G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME if you need to display the
  * name in a user interface.
  * Corresponding #GFileAttributeType is %G_FILE_ATTRIBUTE_TYPE_BYTE_STRING.
@@ -104,8 +120,8 @@ typedef struct _GFileInfoClass   GFileInfoClass;
  * G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME:
  *
  * A key in the "standard" namespace for getting the display name of the file.
- * A display name is guaranteed to be in UTF8 and can thus be displayed in
- * the UI.
+ * A display name is guaranteed to be in UTF-8 and can thus be displayed in
+ * the UI. It is guaranteed to be set on every file.
  * Corresponding #GFileAttributeType is %G_FILE_ATTRIBUTE_TYPE_STRING.
  **/
 #define G_FILE_ATTRIBUTE_STANDARD_DISPLAY_NAME "standard::display-name"     /* string */
@@ -142,7 +158,7 @@ typedef struct _GFileInfoClass   GFileInfoClass;
  *
  * A key in the "standard" namespace for getting the description of the file.
  * The description is a utf8 string that describes the file, generally containing
- * the filename, but can also contain furter information. Example descriptions
+ * the filename, but can also contain further information. Example descriptions
  * could be "filename (on hostname)" for a remote file or "filename (in trash)"
  * for a file in the trash. This is useful for instance as the window title
  * when displaying a directory or for a bookmarks menu.
@@ -459,15 +475,15 @@ typedef struct _GFileInfoClass   GFileInfoClass;
  *
  * A key in the "time" namespace for getting the time the file was last
  * modified. Corresponding #GFileAttributeType is
- * %G_FILE_ATTRIBUTE_TYPE_UINT64, and contains the UNIX time since the
- * file was modified.
+ * %G_FILE_ATTRIBUTE_TYPE_UINT64, and contains the time since the
+ * file was modified, in seconds since the UNIX epoch.
  **/
 #define G_FILE_ATTRIBUTE_TIME_MODIFIED "time::modified"           /* uint64 */
 
 /**
  * G_FILE_ATTRIBUTE_TIME_MODIFIED_USEC:
  *
- * A key in the "time" namespace for getting the miliseconds of the time
+ * A key in the "time" namespace for getting the microseconds of the time
  * the file was last modified. This should be used in conjunction with
  * #G_FILE_ATTRIBUTE_TIME_MODIFIED. Corresponding #GFileAttributeType is
  * %G_FILE_ATTRIBUTE_TYPE_UINT32.
@@ -479,8 +495,8 @@ typedef struct _GFileInfoClass   GFileInfoClass;
  *
  * A key in the "time" namespace for getting the time the file was last
  * accessed. Corresponding #GFileAttributeType is
- * %G_FILE_ATTRIBUTE_TYPE_UINT64, and contains the UNIX time since the
- * file was last accessed.
+ * %G_FILE_ATTRIBUTE_TYPE_UINT64, and contains the time since the
+ * file was last accessed, in seconds since the UNIX epoch.
  **/
 #define G_FILE_ATTRIBUTE_TIME_ACCESS "time::access"               /* uint64 */
 
@@ -499,7 +515,8 @@ typedef struct _GFileInfoClass   GFileInfoClass;
  *
  * A key in the "time" namespace for getting the time the file was last
  * changed. Corresponding #GFileAttributeType is %G_FILE_ATTRIBUTE_TYPE_UINT64,
- * and contains the UNIX time since the file was last changed.
+ * and contains the time since the file was last changed, in seconds since the
+ * UNIX epoch.
  *
  * This corresponds to the traditional UNIX ctime.
  **/
@@ -520,9 +537,11 @@ typedef struct _GFileInfoClass   GFileInfoClass;
  *
  * A key in the "time" namespace for getting the time the file was created.
  * Corresponding #GFileAttributeType is %G_FILE_ATTRIBUTE_TYPE_UINT64,
- * and contains the UNIX time since the file was created.
+ * and contains the time since the file was created, in seconds since the UNIX
+ * epoch.
  *
- * This corresponds to the NTFS ctime.
+ * This may correspond to Linux stx_btime, FreeBSD st_birthtim, NetBSD
+ * st_birthtime or NTFS ctime.
  **/
 #define G_FILE_ATTRIBUTE_TIME_CREATED "time::created"             /* uint64 */
 
@@ -561,8 +580,10 @@ typedef struct _GFileInfoClass   GFileInfoClass;
  * G_FILE_ATTRIBUTE_UNIX_MODE:
  *
  * A key in the "unix" namespace for getting the mode of the file
- * (e.g. whether the file is a regular file, symlink, etc). See lstat()
- * documentation. This attribute is only available for UNIX file systems.
+ * (e.g. whether the file is a regular file, symlink, etc). See the
+ * documentation for `lstat()`: this attribute is equivalent to the `st_mode`
+ * member of `struct stat`, and includes both the file type and permissions.
+ * This attribute is only available for UNIX file systems.
  * Corresponding #GFileAttributeType is %G_FILE_ATTRIBUTE_TYPE_UINT32.
  **/
 #define G_FILE_ATTRIBUTE_UNIX_MODE "unix::mode"                   /* uint32 */
@@ -628,7 +649,8 @@ typedef struct _GFileInfoClass   GFileInfoClass;
  *
  * A key in the "unix" namespace for checking if the file represents a
  * UNIX mount point. This attribute is %TRUE if the file is a UNIX mount
- * point. This attribute is only available for UNIX file systems.
+ * point. Since 2.58, `/` is considered to be a mount point.
+ * This attribute is only available for UNIX file systems.
  * Corresponding #GFileAttributeType is %G_FILE_ATTRIBUTE_TYPE_BOOLEAN.
  **/
 #define G_FILE_ATTRIBUTE_UNIX_IS_MOUNTPOINT "unix::is-mountpoint" /* boolean */
@@ -654,6 +676,33 @@ typedef struct _GFileInfoClass   GFileInfoClass;
  * is %G_FILE_ATTRIBUTE_TYPE_BOOLEAN.
  **/
 #define G_FILE_ATTRIBUTE_DOS_IS_SYSTEM "dos::is-system"           /* boolean */
+
+/**
+ * G_FILE_ATTRIBUTE_DOS_IS_MOUNTPOINT:
+ *
+ * A key in the "dos" namespace for checking if the file is a NTFS mount point
+ * (a volume mount or a junction point).
+ * This attribute is %TRUE if file is a reparse point of type
+ * [IO_REPARSE_TAG_MOUNT_POINT](https://msdn.microsoft.com/en-us/library/dd541667.aspx).
+ * This attribute is only available for DOS file systems.
+ * Corresponding #GFileAttributeType is %G_FILE_ATTRIBUTE_TYPE_BOOLEAN.
+ *
+ * Since: 2.60
+ **/
+#define G_FILE_ATTRIBUTE_DOS_IS_MOUNTPOINT "dos::is-mountpoint"   /* boolean */
+
+/**
+ * G_FILE_ATTRIBUTE_DOS_REPARSE_POINT_TAG:
+ *
+ * A key in the "dos" namespace for getting the file NTFS reparse tag.
+ * This value is 0 for files that are not reparse points.
+ * See the [Reparse Tags](https://msdn.microsoft.com/en-us/library/dd541667.aspx)
+ * page for possible reparse tag values. Corresponding #GFileAttributeType
+ * is %G_FILE_ATTRIBUTE_TYPE_UINT32.
+ *
+ * Since: 2.60
+ **/
+#define G_FILE_ATTRIBUTE_DOS_REPARSE_POINT_TAG "dos::reparse-point-tag"   /* uint32 */
 
 /* Owner attributes */
 
@@ -791,6 +840,15 @@ typedef struct _GFileInfoClass   GFileInfoClass;
 #define G_FILE_ATTRIBUTE_FILESYSTEM_USE_PREVIEW "filesystem::use-preview"        /* uint32 (GFilesystemPreviewType) */
 
 /**
+ * G_FILE_ATTRIBUTE_FILESYSTEM_REMOTE:
+ *
+ * A key in the "filesystem" namespace for checking if the file system
+ * is remote. Is set to %TRUE if the file system is remote.
+ * Corresponding #GFileAttributeType is %G_FILE_ATTRIBUTE_TYPE_BOOLEAN.
+ **/
+#define G_FILE_ATTRIBUTE_FILESYSTEM_REMOTE "filesystem::remote"                   /* boolean */
+
+/**
  * G_FILE_ATTRIBUTE_GVFS_BACKEND:
  *
  * A key in the "gvfs" namespace that gets the name of the current
@@ -813,7 +871,7 @@ typedef struct _GFileInfoClass   GFileInfoClass;
  * G_FILE_ATTRIBUTE_TRASH_ITEM_COUNT:
  *
  * A key in the "trash" namespace.  When requested against
- * "trash:///" returns the number of (toplevel) items in the trash folder.
+ * `trash:///` returns the number of (toplevel) items in the trash folder.
  * Corresponding #GFileAttributeType is %G_FILE_ATTRIBUTE_TYPE_UINT32.
  **/
 #define G_FILE_ATTRIBUTE_TRASH_ITEM_COUNT "trash::item-count"     /* uint32 */
@@ -822,7 +880,7 @@ typedef struct _GFileInfoClass   GFileInfoClass;
  * G_FILE_ATTRIBUTE_TRASH_ORIG_PATH:
  *
  * A key in the "trash" namespace.  When requested against
- * items in "trash:///", will return the original path to the file before it
+ * items in `trash:///`, will return the original path to the file before it
  * was trashed. Corresponding #GFileAttributeType is
  * %G_FILE_ATTRIBUTE_TYPE_BYTE_STRING.
  *
@@ -834,13 +892,24 @@ typedef struct _GFileInfoClass   GFileInfoClass;
  * G_FILE_ATTRIBUTE_TRASH_DELETION_DATE:
  *
  * A key in the "trash" namespace.  When requested against
- * items in "trash:///", will return the date and time when the file
+ * items in `trash:///`, will return the date and time when the file
  * was trashed. The format of the returned string is YYYY-MM-DDThh:mm:ss.
  * Corresponding #GFileAttributeType is %G_FILE_ATTRIBUTE_TYPE_STRING.
  *
  * Since: 2.24
  **/
 #define G_FILE_ATTRIBUTE_TRASH_DELETION_DATE "trash::deletion-date"  /* string */
+
+/**
+ * G_FILE_ATTRIBUTE_RECENT_MODIFIED:
+ *
+ * A key in the "recent" namespace for getting time, when the metadata for the
+ * file in `recent:///` was last changed. Corresponding #GFileAttributeType is
+ * %G_FILE_ATTRIBUTE_TYPE_INT64.
+ *
+ * Since: 2.52
+ **/
+#define G_FILE_ATTRIBUTE_RECENT_MODIFIED "recent::modified"          /* int64 (time_t) */
 
 GLIB_AVAILABLE_IN_ALL
 GType              g_file_info_get_type                  (void) G_GNUC_CONST;
@@ -981,9 +1050,13 @@ GLIB_AVAILABLE_IN_ALL
 const char *      g_file_info_get_content_type       (GFileInfo         *info);
 GLIB_AVAILABLE_IN_ALL
 goffset           g_file_info_get_size               (GFileInfo         *info);
-GLIB_AVAILABLE_IN_ALL
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+GLIB_DEPRECATED_IN_2_62_FOR(g_file_info_get_modification_date_time)
 void              g_file_info_get_modification_time  (GFileInfo         *info,
-						      GTimeVal          *result);
+                                                      GTimeVal          *result);
+G_GNUC_END_IGNORE_DEPRECATIONS
+GLIB_AVAILABLE_IN_2_62
+GDateTime *       g_file_info_get_modification_date_time (GFileInfo     *info);
 GLIB_AVAILABLE_IN_ALL
 const char *      g_file_info_get_symlink_target     (GFileInfo         *info);
 GLIB_AVAILABLE_IN_ALL
@@ -1028,9 +1101,14 @@ void              g_file_info_set_content_type       (GFileInfo         *info,
 GLIB_AVAILABLE_IN_ALL
 void              g_file_info_set_size               (GFileInfo         *info,
 						      goffset            size);
-GLIB_AVAILABLE_IN_ALL
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
+GLIB_DEPRECATED_IN_2_62_FOR(g_file_info_set_modification_date_time)
 void              g_file_info_set_modification_time  (GFileInfo         *info,
-						      GTimeVal          *mtime);
+                                                      GTimeVal          *mtime);
+G_GNUC_END_IGNORE_DEPRECATIONS
+GLIB_AVAILABLE_IN_2_62
+void              g_file_info_set_modification_date_time (GFileInfo     *info,
+                                                          GDateTime     *mtime);
 GLIB_AVAILABLE_IN_ALL
 void              g_file_info_set_symlink_target     (GFileInfo         *info,
 						      const char        *symlink_target);

@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -31,6 +31,11 @@
 
 #include <glib/gutils.h>
 
+#if defined(glib_typeof_2_68) && GLIB_VERSION_MIN_REQUIRED >= GLIB_VERSION_2_68
+/* for glib_typeof */
+#include <type_traits>
+#endif
+
 G_BEGIN_DECLS
 
 /**
@@ -45,6 +50,8 @@ G_BEGIN_DECLS
  * A set of functions used to perform memory allocation. The same #GMemVTable must
  * be used for all allocations in the same program; a call to g_mem_set_vtable(),
  * if it exists, should be prior to any use of GLib.
+ *
+ * This functions related to this has been deprecated in 2.46, and no longer work.
  */
 typedef struct _GMemVTable GMemVTable;
 
@@ -108,26 +115,43 @@ gpointer g_try_realloc_n  (gpointer	 mem,
 			   gsize	 n_blocks,
 			   gsize	 n_block_bytes) G_GNUC_WARN_UNUSED_RESULT;
 
+#if defined(glib_typeof) && GLIB_VERSION_MAX_ALLOWED >= GLIB_VERSION_2_58 && (!defined(glib_typeof_2_68) || GLIB_VERSION_MIN_REQUIRED >= GLIB_VERSION_2_68)
+#define g_clear_pointer(pp, destroy)                     \
+  G_STMT_START                                           \
+  {                                                      \
+    G_STATIC_ASSERT (sizeof *(pp) == sizeof (gpointer)); \
+    glib_typeof ((pp)) _pp = (pp);                       \
+    glib_typeof (*(pp)) _ptr = *_pp;                     \
+    *_pp = NULL;                                         \
+    if (_ptr)                                            \
+      (destroy) (_ptr);                                  \
+  }                                                      \
+  G_STMT_END                                             \
+  GLIB_AVAILABLE_MACRO_IN_2_34
+#else /* __GNUC__ */
 #define g_clear_pointer(pp, destroy) \
   G_STMT_START {                                                               \
     G_STATIC_ASSERT (sizeof *(pp) == sizeof (gpointer));                       \
-    /* Only one access, please */                                              \
-    gpointer *_pp = (gpointer *) (pp);                                         \
+    /* Only one access, please; work around type aliasing */                   \
+    union { char *in; gpointer *out; } _pp;                                    \
     gpointer _p;                                                               \
     /* This assignment is needed to avoid a gcc warning */                     \
     GDestroyNotify _destroy = (GDestroyNotify) (destroy);                      \
                                                                                \
-    _p = *_pp;                                                                 \
+    _pp.in = (char *) (pp);                                                    \
+    _p = *_pp.out;                                                             \
     if (_p) 								       \
       { 								       \
-        *_pp = NULL;							       \
+        *_pp.out = NULL;                                                       \
         _destroy (_p);                                                         \
       }                                                                        \
-  } G_STMT_END
+  } G_STMT_END                                                                 \
+  GLIB_AVAILABLE_MACRO_IN_2_34
+#endif /* __GNUC__ */
 
 /**
  * g_steal_pointer:
- * @pp: a pointer to a pointer
+ * @pp: (not nullable): a pointer to a pointer
  *
  * Sets @pp to %NULL, returning the value that was there before.
  *
@@ -180,6 +204,7 @@ gpointer g_try_realloc_n  (gpointer	 mem,
  *
  * Since: 2.44
  */
+GLIB_AVAILABLE_STATIC_INLINE_IN_2_44
 static inline gpointer
 g_steal_pointer (gpointer pp)
 {
@@ -193,8 +218,14 @@ g_steal_pointer (gpointer pp)
 }
 
 /* type safety */
+#if defined(glib_typeof) && GLIB_VERSION_MAX_ALLOWED >= GLIB_VERSION_2_58 && (!defined(glib_typeof_2_68) || GLIB_VERSION_MIN_REQUIRED >= GLIB_VERSION_2_68)
+#define g_steal_pointer(pp) ((glib_typeof (*pp)) (g_steal_pointer) (pp))
+#else  /* __GNUC__ */
+/* This version does not depend on gcc extensions, but gcc does not warn
+ * about incompatible-pointer-types: */
 #define g_steal_pointer(pp) \
   (0 ? (*(pp)) : (g_steal_pointer) (pp))
+#endif /* __GNUC__ */
 
 /* Optimise: avoid the call to the (slower) _n function if we can
  * determine at compile-time that no overflow happens.
@@ -311,7 +342,7 @@ g_steal_pointer (gpointer pp)
  * to 0's, and returns %NULL on failure. Contrast with g_new0(), which aborts
  * the program on failure.
  * The returned pointer is cast to a pointer to the given type.
- * The function returns %NULL when @n_structs is 0 of if an overflow occurs.
+ * The function returns %NULL when @n_structs is 0 or if an overflow occurs.
  * 
  * Since: 2.8
  * Returns: a pointer to the allocated memory, cast to a pointer to @struct_type
@@ -351,9 +382,9 @@ struct _GMemVTable {
   gpointer (*try_realloc) (gpointer mem,
 			   gsize    n_bytes);
 };
-GLIB_AVAILABLE_IN_ALL
+GLIB_DEPRECATED_IN_2_46
 void	 g_mem_set_vtable (GMemVTable	*vtable);
-GLIB_AVAILABLE_IN_ALL
+GLIB_DEPRECATED_IN_2_46
 gboolean g_mem_is_system_malloc (void);
 
 GLIB_VAR gboolean g_mem_gc_friendly;
@@ -361,7 +392,7 @@ GLIB_VAR gboolean g_mem_gc_friendly;
 /* Memory profiler and checker, has to be enabled via g_mem_set_vtable()
  */
 GLIB_VAR GMemVTable	*glib_mem_profiler_table;
-GLIB_AVAILABLE_IN_ALL
+GLIB_DEPRECATED_IN_2_46
 void	g_mem_profile	(void);
 
 G_END_DECLS

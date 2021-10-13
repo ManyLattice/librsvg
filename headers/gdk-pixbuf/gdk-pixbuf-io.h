@@ -40,26 +40,57 @@
 G_BEGIN_DECLS
 
 typedef struct _GdkPixbufFormat GdkPixbufFormat;
- 
+
+GDK_PIXBUF_AVAILABLE_IN_2_40
+gboolean gdk_pixbuf_init_modules (const char  *path,
+                                  GError     **error);
+
+GDK_PIXBUF_AVAILABLE_IN_ALL
 GType gdk_pixbuf_format_get_type (void) G_GNUC_CONST;
 
+GDK_PIXBUF_AVAILABLE_IN_ALL
 GSList    *gdk_pixbuf_get_formats            (void);
+GDK_PIXBUF_AVAILABLE_IN_2_2
 gchar     *gdk_pixbuf_format_get_name        (GdkPixbufFormat *format);
+GDK_PIXBUF_AVAILABLE_IN_2_2
 gchar     *gdk_pixbuf_format_get_description (GdkPixbufFormat *format);
+GDK_PIXBUF_AVAILABLE_IN_2_2
 gchar    **gdk_pixbuf_format_get_mime_types  (GdkPixbufFormat *format);
+GDK_PIXBUF_AVAILABLE_IN_2_2
 gchar    **gdk_pixbuf_format_get_extensions  (GdkPixbufFormat *format);
+GDK_PIXBUF_AVAILABLE_IN_2_36
+gboolean   gdk_pixbuf_format_is_save_option_supported (GdkPixbufFormat *format,
+                                                       const gchar     *option_key);
+GDK_PIXBUF_AVAILABLE_IN_2_2
 gboolean   gdk_pixbuf_format_is_writable     (GdkPixbufFormat *format);
+GDK_PIXBUF_AVAILABLE_IN_2_6
 gboolean   gdk_pixbuf_format_is_scalable     (GdkPixbufFormat *format);
+GDK_PIXBUF_AVAILABLE_IN_2_6
 gboolean   gdk_pixbuf_format_is_disabled     (GdkPixbufFormat *format);
+GDK_PIXBUF_AVAILABLE_IN_2_6
 void       gdk_pixbuf_format_set_disabled    (GdkPixbufFormat *format,
 					      gboolean         disabled);
+GDK_PIXBUF_AVAILABLE_IN_2_6
 gchar     *gdk_pixbuf_format_get_license     (GdkPixbufFormat *format);
 
+GDK_PIXBUF_AVAILABLE_IN_2_4
 GdkPixbufFormat *gdk_pixbuf_get_file_info    (const gchar     *filename,
 					      gint            *width, 
 					      gint            *height);
+GDK_PIXBUF_AVAILABLE_IN_2_32
+void             gdk_pixbuf_get_file_info_async  (const gchar          *filename,
+						  GCancellable         *cancellable,
+						  GAsyncReadyCallback   callback,
+						  gpointer              user_data);
+GDK_PIXBUF_AVAILABLE_IN_2_32
+GdkPixbufFormat *gdk_pixbuf_get_file_info_finish (GAsyncResult         *async_result,
+						  gint                 *width,
+						  gint                 *height,
+						  GError              **error);
 
+GDK_PIXBUF_AVAILABLE_IN_ALL
 GdkPixbufFormat *gdk_pixbuf_format_copy (const GdkPixbufFormat *format);
+GDK_PIXBUF_AVAILABLE_IN_ALL
 void             gdk_pixbuf_format_free (GdkPixbufFormat       *format);
 
 #ifdef GDK_PIXBUF_ENABLE_BACKEND
@@ -142,34 +173,37 @@ typedef void (* GdkPixbufModuleUpdatedFunc)  (GdkPixbuf *pixbuf,
  * @mask: mask containing bytes which modify how the prefix is matched against
  *  test data
  * @relevance: relevance of this pattern
+ *
+ * The signature prefix for a module.
  * 
  * The signature of a module is a set of prefixes. Prefixes are encoded as
  * pairs of ordinary strings, where the second string, called the mask, if 
- * not %NULL, must be of the same length as the first one and may contain 
+ * not `NULL`, must be of the same length as the first one and may contain
  * ' ', '!', 'x', 'z', and 'n' to indicate bytes that must be matched, 
- * not matched, "don't-care"-bytes, zeros and non-zeros. 
+ * not matched, "don't-care"-bytes, zeros and non-zeros, respectively.
+ *
  * Each prefix has an associated integer that describes the relevance of 
  * the prefix, with 0 meaning a mismatch and 100 a "perfect match".
  * 
  * Starting with gdk-pixbuf 2.8, the first byte of the mask may be '*', 
  * indicating an unanchored pattern that matches not only at the beginning, 
  * but also in the middle. Versions prior to 2.8 will interpret the '*'
- * like an 'x'. 
+ * like an 'x'.
  * 
  * The signature of a module is stored as an array of 
- * #GdkPixbufModulePatterns. The array is terminated by a pattern
- * where the @prefix is %NULL.
+ * `GdkPixbufModulePatterns`. The array is terminated by a pattern
+ * where the `prefix` is `NULL`.
  * 
- * 
- * <informalexample><programlisting>
+ * ```c
  * GdkPixbufModulePattern *signature[] = {
  *   { "abcdx", " !x z", 100 },
  *   { "bla", NULL,  90 },
  *   { NULL, NULL, 0 }
  * };
- * </programlisting>
- * The example matches e.g. "auud\0" with relevance 100, and "blau" with 
- * relevance 90.</informalexample>
+ * ```
+ *
+ * In the example above, the signature matches e.g. "auud\0" with
+ * relevance 100, and "blau" with relevance 90.
  * 
  * Since: 2.2
  */
@@ -180,30 +214,6 @@ struct _GdkPixbufModulePattern {
 	int relevance;
 };
 
-/**
- * GdkPixbufModule:
- * @module_name: the name of the module, usually the same as the
- *  usual file extension for images of this type, eg. "xpm", "jpeg" or "png".
- * @module_path: the path from which the module is loaded.
- * @module: the loaded #GModule.
- * @info: a #GdkPixbufFormat holding information about the module.
- * @load: loads an image from a file.
- * @load_xpm_data: loads an image from data in memory.
- * @begin_load: begins an incremental load.
- * @stop_load: stops an incremental load.
- * @load_increment: continues an incremental load.
- * @load_animation: loads an animation from a file.
- * @save: saves a #GdkPixbuf to a file.
- * @save_to_callback: saves a #GdkPixbuf by calling the given #GdkPixbufSaveFunc.
- * 
- * A #GdkPixbufModule contains the necessary functions to load and save 
- * images in a certain file format. 
- * 
- * A #GdkPixbufModule can be loaded dynamically from a #GModule.
- * Each loadable module must contain a #GdkPixbufModuleFillVtableFunc function 
- * named <function>fill_vtable</function>, which will get called when the module
- * is loaded and must set the function pointers of the #GdkPixbufModule. 
- */
 typedef struct _GdkPixbufModule GdkPixbufModule;
 struct _GdkPixbufModule {
 	char *module_name;
@@ -218,8 +228,8 @@ struct _GdkPixbufModule {
         /* Incremental loading */
 
         gpointer (* begin_load)     (GdkPixbufModuleSizeFunc size_func,
-                                     GdkPixbufModulePreparedFunc prepare_func,
-                                     GdkPixbufModuleUpdatedFunc update_func,
+                                     GdkPixbufModulePreparedFunc prepared_func,
+                                     GdkPixbufModuleUpdatedFunc updated_func,
                                      gpointer user_data,
                                      GError **error);
         gboolean (* stop_load)      (gpointer context,
@@ -247,13 +257,13 @@ struct _GdkPixbufModule {
 				      gchar **option_values,
 				      GError **error);
   
+        gboolean (* is_save_option_supported) (const gchar *option_key);
+
   /*< private >*/
 	void (*_reserved1) (void); 
 	void (*_reserved2) (void); 
 	void (*_reserved3) (void); 
-	void (*_reserved4) (void); 
-	void (*_reserved5) (void); 
-
+	void (*_reserved4) (void);
 };
 
 /**
@@ -279,12 +289,6 @@ typedef void (* GdkPixbufModuleFillVtableFunc) (GdkPixbufModule *module);
  */
 typedef void (* GdkPixbufModuleFillInfoFunc) (GdkPixbufFormat *info);
 
-/*  key/value pairs that can be attached by the pixbuf loader  */
-
-gboolean gdk_pixbuf_set_option  (GdkPixbuf   *pixbuf,
-                                 const gchar *key,
-                                 const gchar *value);
-
 /**
  * GdkPixbufFormatFlags:
  * @GDK_PIXBUF_FORMAT_WRITABLE: the module can write out images in the format.
@@ -306,21 +310,23 @@ typedef enum /*< skip >*/
 
 /**
  * GdkPixbufFormat:
- * @name: the name of the image format.
- * @signature: the signature of the module.
- * @domain: the message domain for the @description.
- * @description: a description of the image format.
- * @mime_types: a %NULL-terminated array of MIME types for the image format.
- * @extensions: a %NULL-terminated array of typical filename extensions for the
- *  image format.
- * @flags: a combination of #GdkPixbufFormatFlags.
- * @disabled: a boolean determining whether the loader is disabled.
+ * @name: the name of the image format
+ * @signature: the signature of the module
+ * @domain: the message domain for the `description`
+ * @description: a description of the image format
+ * @mime_types: (array zero-terminated=1): the MIME types for the image format
+ * @extensions: (array zero-terminated=1): typical filename extensions for the
+ *   image format
+ * @flags: a combination of `GdkPixbufFormatFlags`
+ * @disabled: a boolean determining whether the loader is disabled`
  * @license: a string containing license information, typically set to 
- *  shorthands like "GPL", "LGPL", etc.
+ *   shorthands like "GPL", "LGPL", etc.
  * 
- * A #GdkPixbufFormat contains information about the image format accepted by a
- * module. Only modules should access the fields directly, applications should
- * use the <function>gdk_pixbuf_format_*</function> functions.
+ * A `GdkPixbufFormat` contains information about the image format accepted
+ * by a module.
+ *
+ * Only modules should access the fields directly, applications should
+ * use the `gdk_pixbuf_format_*` family of functions.
  * 
  * Since: 2.2
  */

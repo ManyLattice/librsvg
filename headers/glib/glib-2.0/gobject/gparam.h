@@ -4,7 +4,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -156,14 +156,13 @@ typedef enum
   G_PARAM_CONSTRUCT_ONLY      = 1 << 3,
   G_PARAM_LAX_VALIDATION      = 1 << 4,
   G_PARAM_STATIC_NAME	      = 1 << 5,
-#ifndef G_DISABLE_DEPRECATED
-  G_PARAM_PRIVATE	      = G_PARAM_STATIC_NAME,
-#endif
+  G_PARAM_PRIVATE GLIB_DEPRECATED_ENUMERATOR_IN_2_26 = G_PARAM_STATIC_NAME,
   G_PARAM_STATIC_NICK	      = 1 << 6,
   G_PARAM_STATIC_BLURB	      = 1 << 7,
   /* User defined flags go here */
   G_PARAM_EXPLICIT_NOTIFY     = 1 << 30,
-  G_PARAM_DEPRECATED          = 1 << 31
+  /* Avoid warning with -Wpedantic for gcc6 */
+  G_PARAM_DEPRECATED          = (gint)(1u << 31)
 } GParamFlags;
 
 /**
@@ -192,10 +191,10 @@ typedef enum
 /* --- typedefs & structures --- */
 typedef struct _GParamSpec      GParamSpec;
 typedef struct _GParamSpecClass GParamSpecClass;
-typedef struct _GParameter	GParameter;
+typedef struct _GParameter	GParameter GLIB_DEPRECATED_TYPE_IN_2_54;
 typedef struct _GParamSpecPool  GParamSpecPool;
 /**
- * GParamSpec:
+ * GParamSpec: (ref-func g_param_spec_ref_sink) (unref-func g_param_spec_uref) (set-value-func g_value_set_param) (get-value-func g_value_get_param)
  * @g_type_instance: private #GTypeInstance portion
  * @name: name of this parameter: always an interned string
  * @flags: #GParamFlags flags for this parameter
@@ -266,12 +265,14 @@ struct _GParamSpecClass
  * 
  * The GParameter struct is an auxiliary structure used
  * to hand parameter name/value pairs to g_object_newv().
+ *
+ * Deprecated: 2.54: This type is not introspectable.
  */
 struct _GParameter /* auxiliary structure for _setv() variants */
 {
   const gchar *name;
   GValue       value;
-};
+} GLIB_DEPRECATED_TYPE_IN_2_54;
 
 
 /* --- prototypes --- */
@@ -306,7 +307,7 @@ void		g_param_value_set_default	(GParamSpec    *pspec,
 						 GValue	       *value);
 GLIB_AVAILABLE_IN_ALL
 gboolean	g_param_value_defaults		(GParamSpec    *pspec,
-						 GValue	       *value);
+						 const GValue  *value);
 GLIB_AVAILABLE_IN_ALL
 gboolean	g_param_value_validate		(GParamSpec    *pspec,
 						 GValue	       *value);
@@ -341,7 +342,10 @@ GLIB_DEPRECATED_FOR(g_value_take_param)
 void           g_value_set_param_take_ownership (GValue        *value,
                                                  GParamSpec    *param);
 GLIB_AVAILABLE_IN_2_36
-const GValue *  g_param_spec_get_default_value  (GParamSpec     *param);
+const GValue *  g_param_spec_get_default_value  (GParamSpec    *pspec);
+
+GLIB_AVAILABLE_IN_2_46
+GQuark          g_param_spec_get_name_quark     (GParamSpec    *pspec);
 
 /* --- convenience functions --- */
 typedef struct _GParamSpecTypeInfo GParamSpecTypeInfo;
@@ -390,6 +394,9 @@ struct _GParamSpecTypeInfo
 GLIB_AVAILABLE_IN_ALL
 GType	g_param_type_register_static	(const gchar		  *name,
 					 const GParamSpecTypeInfo *pspec_info);
+
+GLIB_AVAILABLE_IN_2_66
+gboolean g_param_spec_is_valid_name    (const gchar              *name);
 
 /* For registering builting types */
 GType  _g_param_type_register_static_constant (const gchar              *name,

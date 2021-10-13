@@ -5,7 +5,7 @@
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 2 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -97,16 +97,16 @@ typedef void  (*GClosureNotify)		(gpointer	 data,
 /**
  * GClosureMarshal:
  * @closure: the #GClosure to which the marshaller belongs
- * @return_value: (allow-none): a #GValue to store the return
+ * @return_value: (nullable): a #GValue to store the return
  *  value. May be %NULL if the callback of @closure doesn't return a
  *  value.
  * @n_param_values: the length of the @param_values array
  * @param_values: (array length=n_param_values): an array of
  *  #GValues holding the arguments on which to invoke the
  *  callback of @closure
- * @invocation_hint: (allow-none): the invocation hint given as the
+ * @invocation_hint: (nullable): the invocation hint given as the
  *  last argument to g_closure_invoke()
- * @marshal_data: (allow-none): additional data specified when
+ * @marshal_data: (nullable): additional data specified when
  *  registering the marshaller, see g_closure_set_marshal() and
  *  g_closure_set_meta_marshal()
  * 
@@ -122,12 +122,13 @@ typedef void  (*GClosureMarshal)	(GClosure	*closure,
 /**
  * GVaClosureMarshal:
  * @closure: the #GClosure to which the marshaller belongs
- * @return_value: (allow-none): a #GValue to store the return
+ * @return_value: (nullable): a #GValue to store the return
  *  value. May be %NULL if the callback of @closure doesn't return a
  *  value.
- * @instance: the instance on which the closure is invoked.
+ * @instance: (type GObject.TypeInstance): the instance on which the closure is
+ *  invoked.
  * @args: va_list of arguments to be passed to the closure.
- * @marshal_data: (allow-none): additional data specified when
+ * @marshal_data: (nullable): additional data specified when
  *  registering the marshaller, see g_closure_set_marshal() and
  *  g_closure_set_meta_marshal()
  * @n_params: the length of the @param_types array
@@ -174,20 +175,20 @@ struct _GClosureNotifyData
 struct _GClosure
 {
   /*< private >*/
-  volatile      	guint	 ref_count : 15;
+  guint ref_count : 15;  /* (atomic) */
   /* meta_marshal is not used anymore but must be zero for historical reasons
      as it was exposed in the G_CLOSURE_N_NOTIFIERS macro */
-  volatile       	guint	 meta_marshal_nouse : 1;
-  volatile       	guint	 n_guards : 1;
-  volatile       	guint	 n_fnotifiers : 2;	/* finalization notifiers */
-  volatile       	guint	 n_inotifiers : 8;	/* invalidation notifiers */
-  volatile       	guint	 in_inotify : 1;
-  volatile       	guint	 floating : 1;
+  guint meta_marshal_nouse : 1;  /* (atomic) */
+  guint n_guards : 1;  /* (atomic) */
+  guint n_fnotifiers : 2;  /* finalization notifiers (atomic) */
+  guint n_inotifiers : 8;  /* invalidation notifiers (atomic) */
+  guint in_inotify : 1;  /* (atomic) */
+  guint floating : 1;  /* (atomic) */
   /*< protected >*/
-  volatile         	guint	 derivative_flag : 1;
+  guint derivative_flag : 1;  /* (atomic) */
   /*< public >*/
-  volatile       	guint	 in_marshal : 1;
-  volatile       	guint	 is_invalid : 1;
+  guint in_marshal : 1;  /* (atomic) */
+  guint is_invalid : 1;  /* (atomic) */
 
   /*< private >*/	void   (*marshal)  (GClosure       *closure,
 					    GValue /*out*/ *return_value,
@@ -199,9 +200,9 @@ struct _GClosure
 
   /*< private >*/	GClosureNotifyData *notifiers;
 
-  /* invariants/constrains:
+  /* invariants/constraints:
    * - ->marshal and ->data are _invalid_ as soon as ->is_invalid==TRUE
-   * - invocation of all inotifiers occours prior to fnotifiers
+   * - invocation of all inotifiers occurs prior to fnotifiers
    * - order of inotifiers is random
    *   inotifiers may _not_ free/invalidate parameter values (e.g. ->data)
    * - order of fnotifiers is random
