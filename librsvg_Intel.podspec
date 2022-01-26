@@ -96,7 +96,11 @@ Pod::Spec.new do |s|
 
   s.vendored_libraries = "Libraries/Intel/*.dylib"
   s.preserve_paths = "HeadersIntel/**.h"
-  s.xcconfig = { 'HEADER_SEARCH_PATHS' => "${PODS_ROOT}/#{s.name}/HeadersIntel/**" }
+  s.xcconfig = { 
+    'HEADER_SEARCH_PATHS' => "${PODS_ROOT}/#{s.name}/HeadersIntel/**",
+    "GCC_THUMB_SUPPORT[arch=arm64]" => "NO",
+    "GCC_THUMB_SUPPORT[arch=x86_64]" => "YES"
+}
 
   # s.public_header_files = "headers/**/*.h"
   
