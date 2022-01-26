@@ -15,7 +15,7 @@ Pod::Spec.new do |s|
 #  summary should be tweet-length, and the description more in depth.
 #
 
-s.name         = "librsvg"
+s.name         = "librsvgARM"
 s.version      = "0.0.6"
 s.summary      = "Static libraries"
 
@@ -63,7 +63,7 @@ s.author             = { "Mikhail Goodzikevich" => "manylattice7742@yandex.kz" }
 #  the deployment target. You can optionally include the target after the platform.
 #
 
-# s.platform     = :osx, "11.0"
+s.platform     = :osx, "11.0"
 
 # s.platform     = :ios, "5.0"
 
@@ -91,8 +91,6 @@ s.source       = { :git => "https://github.com/flagman/librsvg.git", :tag => "#{
 #  Not including the public_header_files will make all headers public.
 #
 
-if s.platform = :osx, "11.0" 
-{
 s.source_files  = "HeadersARM/**/*.h"
 
 s.vendored_libraries = "Libraries/ARM/*.dylib"
@@ -101,19 +99,6 @@ s.xcconfig = {
 'HEADER_SEARCH_PATHS' => "${PODS_ROOT}/#{s.name}/HeadersARM/**",
 "GCC_THUMB_SUPPORT[arch=arm64]" => "YES",
 "GCC_THUMB_SUPPORT[arch=x86_64]" => "NO"
-}
-}
-elseif s.platform = osx:, "10.13"
-{
-s.source_files  = "HeadersIntel/**/*.h"
-
-s.vendored_libraries = "Libraries/Intel/*.dylib", ""
-s.preserve_paths = "HeadersIntel/**.h"
-s.xcconfig = { 
-'HEADER_SEARCH_PATHS' => "${PODS_ROOT}/#{s.name}/HeadersIntel/**",
-"GCC_THUMB_SUPPORT[arch=arm64]" => "NO",
-"GCC_THUMB_SUPPORT[arch=x86_64]" => "YES"
-}
 }
 
 
