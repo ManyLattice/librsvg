@@ -99,6 +99,7 @@ s.xcconfig = {
 'HEADER_SEARCH_PATHS' => "${PODS_ROOT}/#{s.name}/HeadersARM/**",
 "GCC_THUMB_SUPPORT[arch=arm64]" => "YES",
 "GCC_THUMB_SUPPORT[arch=x86_64]" => "NO"
+'VALID_ARCHS' => ['arm64']
 }
 
 
