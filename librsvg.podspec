@@ -91,9 +91,9 @@ s.source       = { :git => "https://github.com/flagman/librsvg.git", :tag => "#{
 #  Not including the public_header_files will make all headers public.
 #
 
-if s.platform = :osx, "11.0"
+if s.platform = :osx, "11.0" 
+{
 s.source_files  = "HeadersARM/**/*.h"
-# s.exclude_files = "lib/*.a"
 
 s.vendored_libraries = "Libraries/ARM/*.dylib"
 s.preserve_paths = "HeadersARM/**.h"
@@ -102,9 +102,10 @@ s.xcconfig = {
 "GCC_THUMB_SUPPORT[arch=arm64]" => "YES",
 "GCC_THUMB_SUPPORT[arch=x86_64]" => "NO"
 }
+}
 elseif s.platform = osx:, "10.13"
+{
 s.source_files  = "HeadersIntel/**/*.h"
-# s.exclude_files = "lib/*.a"
 
 s.vendored_libraries = "Libraries/Intel/*.dylib", ""
 s.preserve_paths = "HeadersIntel/**.h"
@@ -113,7 +114,8 @@ s.xcconfig = {
 "GCC_THUMB_SUPPORT[arch=arm64]" => "NO",
 "GCC_THUMB_SUPPORT[arch=x86_64]" => "YES"
 }
-end
+}
+
 
 # s.public_header_files = "headers/**/*.h"
 
