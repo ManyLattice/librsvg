@@ -95,11 +95,12 @@ s.source_files  = "HeadersARM/**/*.h"
 
 s.vendored_libraries = "Libraries/ARM/*.dylib"
 s.preserve_paths = "HeadersARM/**.h"
+s.pod_target_xcconfig = { 'EXCLUDED_ARCHS' => 'x86_64' }
+
 s.xcconfig = {
 'HEADER_SEARCH_PATHS' => "${PODS_ROOT}/#{s.name}/HeadersARM/**",
 "GCC_THUMB_SUPPORT[arch=arm64]" => "YES",
-"GCC_THUMB_SUPPORT[arch=x86_64]" => "NO",
-'VALID_ARCHS' => 'arm64'
+"GCC_THUMB_SUPPORT[arch=x86_64]" => "NO"
 }
 
 
