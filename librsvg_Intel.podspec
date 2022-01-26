@@ -53,10 +53,9 @@ Pod::Spec.new do |s|
   #  profile URL.
   #
 
-  s.author             = { "Pavel Malay" => "flagmansupport@gmail.com" }
-  # Or just: s.author    = "Pavel Malay"
-  # s.authors            = { "Pavel Malay" => "flagmansupport@gmail.com" }
-  # s.social_media_url   = "http://twitter.com/Pavel Malay"
+  s.author             = { "Mikhail Goodzikevich" => "manylattice7742@yandex.kz" }
+  # Or just: s.author    = "Mikhail Goodzikevich"
+  # s.authors            = { "Mikhail Goodzikevich" => "manylattice7742@yandex.kz" }
 
   # ――― Platform Specifics ――――――――――――――――――――――――――――――――――――――――――――――――――――――― #
   #
@@ -92,12 +91,12 @@ Pod::Spec.new do |s|
   #  Not including the public_header_files will make all headers public.
   #
 
-  s.source_files  = "headers/**/*.h"
+  s.source_files  = "HeadersIntel/**/*.h"
   # s.exclude_files = "lib/*.a"
 
-  s.vendored_libraries = "lib/*.dylib"
-  s.preserve_paths = "headers/**.h"
-  s.xcconfig = { 'HEADER_SEARCH_PATHS' => "${PODS_ROOT}/#{s.name}/headers/**" }
+  s.vendored_libraries = "Libraries/Intel/*.dylib"
+  s.preserve_paths = "HeadersIntel/**.h"
+  s.xcconfig = { 'HEADER_SEARCH_PATHS' => "${PODS_ROOT}/#{s.name}/HeadersIntel/**" }
 
   # s.public_header_files = "headers/**/*.h"
   
