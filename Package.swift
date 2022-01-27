@@ -19,11 +19,13 @@ let package = Package(
             dependencies: [],
             path: "Sources/librsvg",
             resources: [
-                .process("Libraries/ARM")
+                .copy("Libraries/ARM")
             ],
             publicHeadersPath: "HeadersARM",
             cSettings: [
-                .headerSearchPath("../..")
+                .headerSearchPath("../"),
+                .headerSearchPath("../../"),
+                .headerSearchPath("cairo/cairo.h")
             ]
         )
     ]
