@@ -19,9 +19,12 @@ let package = Package(
             dependencies: [],
             path: "Sources/librsvg",
             resources: [
-                .copy("Libraries/ARM")
+                .process("Libraries/ARM")
             ],
-            publicHeadersPath: "HeadersARM"
+            publicHeadersPath: "HeadersARM",
+            cSettings: [
+                .headerSearchPath("../..")
+            ]
         )
     ]
 )
