@@ -21,11 +21,9 @@ let package = Package(
             resources: [
                 .copy("Libraries/ARM")
             ],
-            publicHeadersPath: "HeadersARM",
+//            publicHeadersPath: "HeadersARM",
             cSettings: [
-                .headerSearchPath("../"),
-                .headerSearchPath("../../"),
-                .headerSearchPath("cairo/cairo.h")
+                .headerSearchPath("HeadersARM/cairo/cairo.h")
             ]
         )
     ]
