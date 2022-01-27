@@ -19,16 +19,9 @@ let package = Package(
             dependencies: [],
             path: "Sources/librsvg",
             resources: [
-                Resource.copy("Libraries")
+                .copy("Libraries/ARM")
             ],
-            publicHeadersPath: "HeadersARM",
-            cSettings: [
-                .headerSearchPath("cairo"),
-                .headerSearchPath("gdk-pixbuf"),
-                .headerSearchPath("glib"),
-                .headerSearchPath("glib-2.0"),
-                .headerSearchPath("librsvg")
-            ]
+            publicHeadersPath: "HeadersARM"
         )
     ]
 )
