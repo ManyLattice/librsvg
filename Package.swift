@@ -6,10 +6,11 @@ import Darwin
 
 let package = Package(
     name: "librsvg",
+    platforms: [.macOS(.v11)],
     products: [
         .library(
             name: "librsvg",
-            targets: ["librsvg"]),
+            targets: ["librsvg"])
     ],
     dependencies: [],
     targets: [
