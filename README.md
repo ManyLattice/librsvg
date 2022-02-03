@@ -1,3 +1,3 @@
 # librsvg
-
-A description of this package.
+# librsvg
+# librsvg
